@@ -1,5 +1,7 @@
 # Beta
 
+[![Circle CI](https://circleci.com/gh/Teddy-Schmitz/beta.svg?style=svg)](https://circleci.com/gh/Teddy-Schmitz/beta)
+
 Beta is a continuous deployment tool for AWS API Gateway. It's purpose is to make managing a project using API Gateway version controlled and tested.
 Designed to be used with [alpha](https://github.com/boxidau/alpha) the lambda ci/cd tool.
 
