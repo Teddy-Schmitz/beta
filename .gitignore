@@ -1,0 +1,5 @@
+env
+alpha.egg-info
+*.pyc
+.idea
+.cache
