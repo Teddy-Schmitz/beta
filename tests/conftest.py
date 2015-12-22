@@ -103,7 +103,7 @@ def create_file_structure_src():
     shutil.rmtree(tempdir)
 
 @pytest.yield_fixture()
-def remove_network_beta(beta, monkeypatch, mocker):
+def mock_aws(monkeypatch, mocker):
     rest_apis = {
         'position': '1',
         'items': [
@@ -183,6 +183,5 @@ def remove_network_beta(beta, monkeypatch, mocker):
     mock_aws.put_integration.return_value = None
     mock_aws.put_integration_response.return_value = None
 
-    mocker.patch.object(beta, 'apigw', new=mock_aws)
+    yield mock_aws
 
-    yield beta

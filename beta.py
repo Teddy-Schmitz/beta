@@ -15,13 +15,13 @@ class Beta(object):
     def enumerate_modules(project_path):
         for dirname in os.listdir(project_path):
             try:
-                with open(os.path.join(project_path, dirname, 'gateway.json')) as lbd_config_file:
-                    yield os.path.join(project_path, dirname), json.load(lbd_config_file)
+                with open(os.path.join(project_path, dirname, 'gateway.json')) as api_config_file:
+                    yield os.path.join(project_path, dirname), json.load(api_config_file)
             except IOError:
                 #print ('Skipping {0}, failed to open lambda.json'.format(dirname)
                 pass
             except ValueError:
-                print ('Could not read json from {0}'.format(lbd_config_file))
+                print ('Could not read json from {0}'.format(api_config_file))
 
     @staticmethod
     def check_config(gw_config):
@@ -94,38 +94,40 @@ class Beta(object):
 
         for resource in gw_config['resources']:
             parent_path = resource['parentPath']
-            path_part = resource['pathPart']
+            path_part = resource.get('pathPart', '')
 
             parent_id = next((x['id'] for x in resources if x['path'] == parent_path))
 
-            if not parent_path == '/' and not path_part:
-                resource_id = self.apigw.create_resource(restApiId=restapi_id,
-                                                         parentId=parent_id, path_part=path_part)['id']
-            else:
+            if parent_path == '/' and not path_part:
                 resource_id = parent_id
+
+            else:
+                resource_id = self.apigw.create_resource(restApiId=restapi_id,
+                                                         parentId=parent_id, pathPart=path_part)['id']
 
             for method in resource['methods']:
                 self.apigw.put_method(restApiId=restapi_id, resourceId=resource_id, httpMethod=method['httpMethod'],
                                       authorizationType=method['authorizationType'],
                                       apiKeyRequired=method.get('apiKeyRequired'),
                                       requestParameters=method.get('requestParameters', {}),
-                                      requestModels=method['requestModels'])
+                                      requestModels=method.get('requestModels', {}))
                 for response in method['methodResponse']:
                     self.apigw.put_method_response(restApiId=restapi_id, resourceId=resource_id,
                                                    httpMethod=method['httpMethod'],
                                                    statusCode=response['statusCode'],
-                                                   responseParameters=response['responseParameters'],
-                                                   responseModels=response['responseModels'])
+                                                   responseParameters=response.get('responseParameters', {}),
+                                                   responseModels=response.get('responseModels', {}))
 
             for integration in resource['integrations']:
                 self.apigw.put_integration(restApiId=restapi_id, resourceId=resource_id,
                                            httpMethod=integration['httpMethod'],
-                                           type=integration['type'], uri=integration['uri'],
-                                           integrationHttpMethod=integration['integrationHttpMethod'])
+                                           type=integration['type'], uri=integration.get('uri', ''),
+                                           integrationHttpMethod=integration.get('integrationHttpMethod', ''),
+                                           requestTemplates=integration.get('requestTemplates', {}))
 
                 for response in integration['integrationResponse']:
                     self.apigw.put_integration_response(restApiId=restapi_id, resourceId=resource_id,
                                                         httpMethod=integration['httpMethod'],
                                                         statusCode=response['statusCode'],
-                                                        responseParameters=response['responseParameters'],
+                                                       responseParameters=response.get('responseParameters', {}),
                                                         responseTemplates=response['responseTemplates'])
